@@ -1,4 +1,4 @@
-import { BillState, Item, Person, StoredBillState } from '../types'
+import { BillState, Item, ItemSplit, Person, StoredBillState } from '../types'
 
 const CURRENT_STORAGE_VERSION = 1
 
@@ -31,7 +31,9 @@ export function addPerson(state: BillState, name: string): BillState {
 }
 
 export function removePerson(state: BillState, personId: string): BillState {
-  const personHasItems = state.items.some((item) => item.assignedTo === personId)
+  const personHasItems = state.items.some((item) =>
+    item.splits.some((split) => split.personId === personId)
+  )
 
   if (personHasItems) {
     console.warn(
@@ -64,12 +66,22 @@ export function addItem(
   state: BillState,
   name: string,
   amount: number,
-  assignedTo: string,
+  splits: ItemSplit[],
   taxRate?: number
 ): BillState {
-  const personExists = state.people.some((p) => p.id === assignedTo)
-  if (!personExists) {
-    console.warn(`Cannot add item: person with ID ${assignedTo} does not exist`)
+  // Validate all person IDs exist
+  const allPersonsExist = splits.every((split) =>
+    state.people.some((p) => p.id === split.personId)
+  )
+  if (!allPersonsExist) {
+    console.warn('Cannot add item: one or more assigned persons do not exist')
+    return state
+  }
+
+  // Validate percentages sum to 100
+  const totalPercentage = splits.reduce((sum, split) => sum + split.percentage, 0)
+  if (Math.abs(totalPercentage - 100) > 0.01) {
+    console.warn(`Cannot add item: splits must sum to 100%, got ${totalPercentage}%`)
     return state
   }
 
@@ -77,7 +89,7 @@ export function addItem(
     id: generateId(),
     name,
     amount,
-    assignedTo,
+    splits,
     taxRate: taxRate ?? state.taxRate,
   }
   return {
@@ -106,21 +118,27 @@ export function updateItem(
   }
 }
 
-// Reassign item to different person
+// Reassign item to different splits
 export function reassignItem(
   state: BillState,
   itemId: string,
-  newPersonId: string
+  newSplits: ItemSplit[]
 ): BillState {
-  const personExists = state.people.some((p) => p.id === newPersonId)
-  if (!personExists) {
-    console.warn(
-      `Cannot reassign item: person with ID ${newPersonId} does not exist`
-    )
+  const allPersonsExist = newSplits.every((split) =>
+    state.people.some((p) => p.id === split.personId)
+  )
+  if (!allPersonsExist) {
+    console.warn('Cannot reassign item: one or more assigned persons do not exist')
     return state
   }
 
-  return updateItem(state, itemId, { assignedTo: newPersonId })
+  const totalPercentage = newSplits.reduce((sum, split) => sum + split.percentage, 0)
+  if (Math.abs(totalPercentage - 100) > 0.01) {
+    console.warn(`Cannot reassign item: splits must sum to 100%, got ${totalPercentage}%`)
+    return state
+  }
+
+  return updateItem(state, itemId, { splits: newSplits })
 }
 
 // Tax and tip operations
@@ -154,9 +172,7 @@ export function removePersonAndReassignItems(
   personId: string,
   reassignToPersonId: string
 ): BillState {
-  const targetPersonExists = state.people.some(
-    (p) => p.id === reassignToPersonId
-  )
+  const targetPersonExists = state.people.some((p) => p.id === reassignToPersonId)
   if (!targetPersonExists) {
     console.warn(
       `Cannot reassign items: target person with ID ${reassignToPersonId} does not exist`
@@ -167,26 +183,71 @@ export function removePersonAndReassignItems(
   return {
     ...state,
     people: state.people.filter((person) => person.id !== personId),
-    items: state.items.map((item) =>
-      item.assignedTo === personId
-        ? { ...item, assignedTo: reassignToPersonId }
-        : item
-    ),
+    items: state.items.map((item) => {
+      const hasSplitForPerson = item.splits.some((split) => split.personId === personId)
+      if (!hasSplitForPerson) return item
+
+      // Remove the old person's split and add their percentage to the reassign target
+      const oldSplit = item.splits.find((split) => split.personId === personId)
+      const targetSplit = item.splits.find((split) => split.personId === reassignToPersonId)
+
+      const newSplits = item.splits
+        .filter((split) => split.personId !== personId)
+        .map((split) =>
+          split.personId === reassignToPersonId
+            ? { ...split, percentage: split.percentage + (oldSplit?.percentage || 0) }
+            : split
+        )
+
+      // If target person wasn't in splits, add them with the old person's percentage
+      if (!targetSplit && oldSplit) {
+        newSplits.push({ personId: reassignToPersonId, percentage: oldSplit.percentage })
+      }
+
+      return { ...item, splits: newSplits }
+    }),
   }
 }
 
 // Storage migrations
-export function migrateStoredState(stored: StoredBillState): BillState {
+export function migrateStoredState(stored: any): BillState {
   const { version, people, items, taxRate, tipMode, tipAmount } = stored
 
   if (version === CURRENT_STORAGE_VERSION) {
-    return { people, items, taxRate, tipMode, tipAmount }
+    // Ensure all items have splits array
+    const migratedItems = items.map((item: any) => {
+      if ('splits' in item) {
+        return item
+      }
+      // Migrate old format with assignedTo to new format with splits
+      if ('assignedTo' in item) {
+        return {
+          id: item.id,
+          name: item.name,
+          amount: item.amount,
+          splits: [{ personId: item.assignedTo, percentage: 100 }],
+          taxRate: item.taxRate,
+        }
+      }
+      return item
+    })
+
+    return { people, items: migratedItems, taxRate, tipMode, tipAmount }
   }
 
   if (version === 0 || version === undefined) {
-    // Migration from version 0 to 1: no changes needed for now
-    // This is a placeholder for future migrations
-    return { people, items, taxRate, tipMode, tipAmount }
+    // Migration from version 0 to 1: convert assignedTo to splits
+    const migratedItems = items.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      amount: item.amount,
+      splits: item.assignedTo
+        ? [{ personId: item.assignedTo, percentage: 100 }]
+        : item.splits || [],
+      taxRate: item.taxRate,
+    }))
+
+    return { people, items: migratedItems, taxRate, tipMode, tipAmount }
   }
 
   console.warn(`Unknown storage version: ${version}. Using initial state.`)

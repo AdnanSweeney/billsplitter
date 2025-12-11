@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { BillState, Item, Person, StoredBillState } from '../types'
+import { BillState, Item, ItemSplit, Person, StoredBillState } from '../types'
 import useLocalStorageWithDebounce from './useLocalStorageWithDebounce'
 import {
   getInitialBillState,
@@ -62,8 +62,8 @@ function useBillState() {
 
   // Item operations
   const handleAddItem = useCallback(
-    (name: string, amount: number, assignedTo: string, taxRate?: number) => {
-      updateState(addItem(billState, name, amount, assignedTo, taxRate))
+    (name: string, amount: number, splits: ItemSplit[], taxRate?: number) => {
+      updateState(addItem(billState, name, amount, splits, taxRate))
     },
     [billState, updateState]
   )
@@ -83,8 +83,8 @@ function useBillState() {
   )
 
   const handleReassignItem = useCallback(
-    (itemId: string, newPersonId: string) => {
-      updateState(reassignItem(billState, itemId, newPersonId))
+    (itemId: string, newSplits: ItemSplit[]) => {
+      updateState(reassignItem(billState, itemId, newSplits))
     },
     [billState, updateState]
   )
