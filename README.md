@@ -2,6 +2,10 @@
 
 Split bills with different tax rates applied to different charges
 
+## 🚀 Live Application
+
+The app is deployed and accessible at: **https://billsplitter.surge.sh**
+
 ## Tech Stack
 
 - **React 19** - UI library
@@ -76,6 +80,18 @@ npm run lint
 ```bash
 npm run format
 ```
+
+## Deployment
+
+The app is deployed to surge.sh, a static hosting platform. For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+### Quick Deploy
+
+```bash
+npm run deploy
+```
+
+This will build the app and deploy it to https://billsplitter.surge.sh
 
 ## Features (Planned)
 
