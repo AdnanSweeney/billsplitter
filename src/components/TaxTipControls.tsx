@@ -1,86 +1,76 @@
 import { ChangeEvent } from 'react'
 import styled from 'styled-components'
+import {
+  Card,
+  SectionTitle,
+  SectionDescription,
+  HelperText,
+  controlStyles,
+  buttonStyles,
+} from '../styles/primitives'
 import { CUSTOM_TAX_PRESET_ID, TAX_PRESETS } from '../constants'
 import { useBillStateContext } from '../hooks'
 
-const Panel = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
+const Panel = styled(Card)`
+  gap: 1.5rem;
 `
 
-const Title = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  color: #333;
+const Intro = styled.header`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`
+
+const Title = styled(SectionTitle)``
+
+const Description = styled(SectionDescription)`
+  color: var(--color-text-muted);
 `
 
 const FieldGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 0.5rem;
 `
 
 const Label = styled.label`
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #555;
+  color: var(--color-text-muted);
 `
 
 const Select = styled.select`
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: #667eea;
-  }
+  ${controlStyles}
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%),
+    linear-gradient(135deg, var(--color-text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 13px) calc(50% - 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2.5rem;
 `
 
 const Input = styled.input`
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: #667eea;
-  }
-`
-
-const HelperText = styled.p`
-  font-size: 0.85rem;
-  color: #777;
-  margin: 0;
+  ${controlStyles}
 `
 
 const ModeToggle = styled.div`
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
 `
 
 const ToggleButton = styled.button<{ $active: boolean }>`
-  flex: 1;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  background: ${(props) => (props.$active ? '#667eea' : '#f1f1f5')};
-  color: ${(props) => (props.$active ? '#fff' : '#555')};
-  transition: background 0.2s ease, transform 0.2s ease;
+  ${buttonStyles}
+  min-height: 2.75rem;
+  border: 1px solid ${({ $active }) => ($active ? 'transparent' : 'var(--color-border-strong)')};
+  background: ${({ $active }) => ($active ? 'var(--color-primary)' : 'var(--color-surface)')};
+  color: ${({ $active }) => ($active ? '#fff' : 'var(--color-heading)')};
+  box-shadow: ${({ $active }) => ($active ? 'var(--shadow-button)' : 'none')};
 
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-1px);
+    box-shadow: ${({ $active }) => ($active ? 'var(--shadow-button)' : 'var(--shadow-card)')};
   }
 `
 
@@ -115,7 +105,10 @@ export function TaxTipControls() {
 
   return (
     <Panel>
-      <Title>Tax & Tip Settings</Title>
+      <Intro>
+        <Title>Tax &amp; Tip Settings</Title>
+        <Description>Fine-tune regional tax presets and how tips are distributed across people.</Description>
+      </Intro>
 
       <FieldGroup>
         <Label htmlFor="province">Province preset</Label>

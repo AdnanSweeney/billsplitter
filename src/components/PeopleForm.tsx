@@ -1,121 +1,113 @@
 import { useState } from 'react'
 import styled from 'styled-components'
 import { useBillStateContext } from '../hooks'
+import {
+  Card,
+  SectionTitle,
+  SectionDescription,
+  controlStyles,
+  Button,
+} from '../styles/primitives'
 
-const FormContainer = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
+const FormCard = styled(Card)`
+  gap: 1.5rem;
 `
 
-const FormTitle = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  color: #333;
+const Intro = styled.header`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`
+
+const Title = styled(SectionTitle)``
+
+const Description = styled(SectionDescription)`
+  color: var(--color-text-muted);
 `
 
 const Form = styled.form`
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
   flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
 
-  @media (max-width: 600px) {
-    flex-direction: column;
+  @media (min-width: 640px) {
+    flex-wrap: nowrap;
   }
 `
 
-const Input = styled.input`
+const TextInput = styled.input`
+  ${controlStyles}
   flex: 1;
-  padding: 12px;
-  font-size: 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  transition: border-color 0.2s;
-  min-width: 200px;
-
-  &:focus {
-    outline: none;
-    border-color: #667eea;
-  }
-
-  &:invalid {
-    border-color: #e74c3c;
-  }
+  min-width: min(16rem, 100%);
 `
 
-const Button = styled.button<{ variant?: 'primary' | 'danger' }>`
-  padding: 12px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  background-color: ${(props) => {
-    if (props.variant === 'danger') return '#e74c3c'
-    return '#667eea'
-  }};
-  color: white;
+const SubmitButton = styled(Button)`
+  width: 100%;
 
-  &:hover:not(:disabled) {
-    opacity: 0.9;
-    transform: translateY(-2px);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  @media (min-width: 640px) {
+    width: auto;
   }
 `
 
 const PeopleList = styled.ul`
   list-style: none;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   margin: 0;
+  padding: 0;
 `
 
 const PersonItem = styled.li`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  border-bottom: 1px solid #e0e0e0;
-  transition: background-color 0.2s;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  transition: transform 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background-color: #f5f5f5;
-  }
-
-  &:last-child {
-    border-bottom: none;
+    transform: translateY(-2px);
+    border-color: var(--color-border-strong);
   }
 `
 
 const PersonName = styled.span`
-  font-size: 1rem;
-  color: #333;
+  font-weight: 600;
+  color: var(--color-heading);
+`
+
+const RemoveButton = styled(Button)`
+  min-height: 2.4rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+  border-radius: 0.8rem;
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    box-shadow: none;
+  }
 `
 
 const ErrorMessage = styled.p`
-  color: #e74c3c;
-  font-size: 0.875rem;
-  margin-top: 8px;
-  margin-bottom: 0;
+  color: var(--color-danger);
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: -0.5rem 0 0;
 `
 
 const EmptyState = styled.p`
-  color: #999;
-  font-style: italic;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 0.95rem;
+  padding: 1rem;
   text-align: center;
-  padding: 20px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  background: var(--color-surface-muted);
 `
 
 export function PeopleForm() {
@@ -164,11 +156,14 @@ export function PeopleForm() {
   }
 
   return (
-    <FormContainer>
-      <FormTitle>People</FormTitle>
+    <FormCard>
+      <Intro>
+        <Title>People</Title>
+        <Description>Add everyone sharing the bill so you can split each item intentionally.</Description>
+      </Intro>
 
       <Form onSubmit={handleSubmit}>
-        <Input
+        <TextInput
           type="text"
           placeholder="Enter person's name"
           value={personName}
@@ -176,9 +171,9 @@ export function PeopleForm() {
           aria-label="Person name"
           required
         />
-        <Button type="submit" disabled={!personName.trim()}>
-          Add Person
-        </Button>
+        <SubmitButton type="submit" disabled={!personName.trim()}>
+          Add person
+        </SubmitButton>
       </Form>
 
       {error && <ErrorMessage role="alert">{error}</ErrorMessage>}
@@ -190,17 +185,18 @@ export function PeopleForm() {
           {state.people.map((person) => (
             <PersonItem key={person.id}>
               <PersonName>{person.name}</PersonName>
-              <Button
-                variant="danger"
+              <RemoveButton
+                type="button"
+                $variant="danger"
                 onClick={() => handleRemove(person.id)}
                 aria-label={`Remove ${person.name}`}
               >
                 Remove
-              </Button>
+              </RemoveButton>
             </PersonItem>
           ))}
         </PeopleList>
       )}
-    </FormContainer>
+    </FormCard>
   )
 }

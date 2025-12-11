@@ -2,61 +2,64 @@ import { useMemo } from 'react'
 import styled from 'styled-components'
 import { useBillStateContext } from '../hooks'
 import { calculateBillSummary } from '../utils'
+import { Card, SectionTitle, SectionDescription, HelperText } from '../styles/primitives'
 
-const Panel = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
+const Panel = styled(Card)`
+  gap: 1.5rem;
 `
 
-const Title = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  color: #333;
+const Intro = styled.header`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`
+
+const Title = styled(SectionTitle)``
+
+const Description = styled(SectionDescription)`
+  color: var(--color-text-muted);
 `
 
 const SummaryList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 `
 
 const PersonCard = styled.div`
-  border: 1px solid #ececf5;
-  border-radius: 10px;
-  padding: 16px;
-  background: #f9f9ff;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: var(--color-surface-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 `
 
 const PersonName = styled.h3`
-  margin: 0 0 12px 0;
-  font-size: 1.1rem;
-  color: #444;
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  color: var(--color-heading);
 `
 
 const StatRow = styled.div`
   display: flex;
   justify-content: space-between;
   font-size: 0.95rem;
-  padding: 4px 0;
-  color: #555;
+  color: var(--color-text-muted);
 `
 
 const TotalValue = styled.span`
   font-weight: 600;
-  color: #333;
+  color: var(--color-heading);
 `
 
 const OverallTotals = styled.div`
-  border-top: 1px solid #ececf5;
-  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.65rem;
 `
 
 const GrandTotal = styled.div`
@@ -64,19 +67,21 @@ const GrandTotal = styled.div`
   justify-content: space-between;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #222;
+  color: var(--color-heading);
 `
 
 const EmptyState = styled.p`
-  color: #777;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 1rem;
+  padding: 1.25rem;
   text-align: center;
-  margin: 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+  background: var(--color-surface-muted);
 `
 
-const Meta = styled.p`
-  font-size: 0.85rem;
-  color: #777;
-  margin: 0 0 16px;
+const Meta = styled(HelperText)`
+  font-size: 0.9rem;
 `
 
 const formatCurrency = (value: number) => `$${value.toFixed(2)}`
@@ -90,10 +95,14 @@ export function SummaryView() {
 
   return (
     <Panel>
-      <Title>Summary</Title>
-      <Meta>
-        Tax {taxPercentDisplay}% · Tip {tipPercentDisplay}% · {state.tipMode === 'equal' ? 'Equal tip split' : 'Proportional tip split'}
-      </Meta>
+      <Intro>
+        <Title>Summary</Title>
+        <Description>See the full breakdown per person with tax and tip applied.</Description>
+        <Meta>
+          Tax {taxPercentDisplay}% · Tip {tipPercentDisplay}% ·{' '}
+          {state.tipMode === 'equal' ? 'Equal tip split' : 'Proportional tip split'}
+        </Meta>
+      </Intro>
 
       {summary.perPerson.length === 0 ? (
         <EmptyState>Add people (and items) to see how the bill is split.</EmptyState>
