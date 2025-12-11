@@ -4,12 +4,18 @@ export interface Person {
   name: string
 }
 
+// Item split assignment
+export interface ItemSplit {
+  personId: string
+  percentage: number
+}
+
 // Item assignment model
 export interface Item {
   id: string
   name: string
   amount: number
-  assignedTo: string // Person ID
+  splits: ItemSplit[]
   taxRate: number
 }
 
