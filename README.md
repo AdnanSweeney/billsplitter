@@ -1,5 +1,7 @@
 # BillSplitter
 
+[![Deploy to Surge.sh](https://github.com/AdnanSweeney/billsplitter/actions/workflows/deploy.yml/badge.svg)](https://github.com/AdnanSweeney/billsplitter/actions/workflows/deploy.yml)
+
 Split bills with different tax rates applied to different charges
 
 ## 🚀 Live Application
@@ -85,7 +87,26 @@ npm run format
 
 The app is deployed to surge.sh, a static hosting platform. For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-### Quick Deploy
+### Automated Deployment with GitHub Actions
+
+The app automatically deploys to surge.sh when code is pushed to the `main` branch using GitHub Actions.
+
+**Setup Requirements:**
+1. Add your Surge token as a GitHub repository secret:
+   - Get your token: Run `npx surge token` locally (after logging in with `npx surge login`)
+   - Go to your GitHub repository → Settings → Secrets and variables → Actions
+   - Create a new repository secret named `SURGE_TOKEN`
+   - Paste your Surge token as the value
+
+2. Push to the `main` branch to trigger automatic deployment
+
+3. Monitor deployment status:
+   - View workflow runs in the Actions tab on GitHub
+   - Check the workflow status badge at the top of this README
+
+### Manual Deployment
+
+You can also deploy manually from your local machine:
 
 ```bash
 npm run deploy
