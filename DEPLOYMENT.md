@@ -6,6 +6,10 @@ This document provides instructions for deploying the BillSplitter app to surge.
 
 The BillSplitter app is deployed to **surge.sh**, a simple, single-command web publishing platform for static content. This eliminates the need for complex server infrastructure while ensuring the app is always accessible.
 
+Deployment can be done in two ways:
+1. **Automated via GitHub Actions** - Automatically deploys when code is pushed to the `main` branch (recommended)
+2. **Manual deployment** - Deploy from your local machine using npm scripts
+
 ## Live Application
 
 **Public URL:** https://billsplitter.surge.sh
@@ -43,7 +47,116 @@ The project uses **Vite** as the build tool with the following configuration:
 - **TypeScript compilation:** All TypeScript files are type-checked before building
 - **Bundled dependencies:** React 19, styled-components, and all required libraries
 
-## Deployment Methods
+## Automated Deployment with GitHub Actions
+
+### Overview
+
+The repository is configured with a GitHub Actions workflow that automatically builds and deploys the app to surge.sh whenever code is pushed to the `main` branch.
+
+### Initial Setup
+
+To enable automated deployment, you need to add your Surge authentication token as a GitHub secret:
+
+#### Step 1: Get Your Surge Token
+
+First, make sure you're logged in to Surge:
+
+```bash
+npx surge login
+```
+
+Then retrieve your token:
+
+```bash
+npx surge token
+```
+
+Copy the token that is displayed.
+
+#### Step 2: Add Token to GitHub Secrets
+
+1. Go to your GitHub repository: https://github.com/AdnanSweeney/billsplitter
+2. Navigate to **Settings** → **Secrets and variables** → **Actions**
+3. Click **"New repository secret"**
+4. Name: `SURGE_TOKEN`
+5. Value: Paste your Surge token from Step 1
+6. Click **"Add secret"**
+
+### How It Works
+
+The GitHub Actions workflow (`.github/workflows/deploy.yml`) performs the following steps:
+
+1. **Triggers** on every push to the `main` branch
+2. **Checks out** the code from the repository
+3. **Sets up** Node.js 18 environment
+4. **Installs** dependencies using `npm ci`
+5. **Builds** the production bundle with `npm run build`
+6. **Deploys** the `dist/` directory to surge.sh using the `SURGE_TOKEN` secret
+
+### Monitoring Deployments
+
+You can monitor deployment status in several ways:
+
+1. **GitHub Actions Tab:**
+   - Go to the Actions tab in your repository
+   - View all workflow runs and their status
+   - Click on a specific run to see detailed logs
+
+2. **Workflow Badge:**
+   - A badge is displayed at the top of the README.md
+   - Shows the current status of the deployment workflow
+   - Green = successful, Red = failed
+
+3. **Commit Status:**
+   - GitHub shows workflow status next to each commit
+   - Check marks indicate successful deployment
+
+### Testing the Workflow
+
+To test the automated deployment:
+
+1. Make a change to your code
+2. Commit and push to the `main` branch:
+   ```bash
+   git add .
+   git commit -m "Test automated deployment"
+   git push origin main
+   ```
+3. Go to the Actions tab on GitHub to watch the deployment
+4. Once complete, verify changes at https://billsplitter.surge.sh
+
+### Troubleshooting Automated Deployment
+
+#### Deployment Fails with Authentication Error
+
+**Cause:** The `SURGE_TOKEN` secret is missing or incorrect.
+
+**Solution:**
+1. Verify the secret exists in GitHub Settings → Secrets
+2. Re-generate your token with `npx surge token`
+3. Update the secret with the new token
+
+#### Deployment Succeeds but Changes Don't Appear
+
+**Cause:** Browser cache or deployment propagation delay.
+
+**Solution:**
+1. Hard refresh your browser (Ctrl+Shift+R or Cmd+Shift+R)
+2. Wait 1-2 minutes for changes to propagate
+3. Try opening in an incognito/private window
+
+#### Build Fails in GitHub Actions
+
+**Cause:** TypeScript errors or missing dependencies.
+
+**Solution:**
+1. Check the workflow logs in the Actions tab
+2. Run `npm run build` locally to reproduce the error
+3. Fix the issues and push again
+
+## Manual Deployment Methods
+
+If you need to deploy manually from your local machine, you can use any of the following methods:
 
 ### Method 1: Using npm script (Recommended)
 
@@ -220,9 +333,11 @@ For BillSplitter app issues, check:
 | Item | Details |
 |------|---------|
 | **Domain** | https://billsplitter.surge.sh |
+| **Automated Deployment** | ✅ GitHub Actions (on push to `main`) |
+| **Manual Deploy Command** | `npm run deploy` |
 | **Build Command** | `npm run build` |
-| **Deploy Command** | `npm run deploy` |
 | **Output Directory** | `dist/` |
 | **Platform** | surge.sh (Static Hosting) |
 | **HTTPS** | ✅ Yes (Free, always enabled) |
-| **Environment Variables** | None required |
+| **Required Secret** | `SURGE_TOKEN` (in GitHub Secrets) |
+| **Workflow File** | `.github/workflows/deploy.yml` |
