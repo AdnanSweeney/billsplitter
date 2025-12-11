@@ -1,0 +1,149 @@
+import { useCallback } from 'react'
+import { BillState, Item, Person, StoredBillState } from '../types'
+import useLocalStorageWithDebounce from './useLocalStorageWithDebounce'
+import {
+  getInitialBillState,
+  migrateStoredState,
+  prepareForStorage,
+  addPerson,
+  removePerson,
+  updatePerson,
+  addItem,
+  removeItem,
+  updateItem,
+  reassignItem,
+  setTaxRate,
+  setTipMode,
+  setTipAmount,
+  removePersonAndReassignItems,
+} from '../utils/billStateHelpers'
+
+const STORAGE_KEY = 'billsplitter_state'
+
+function useBillState() {
+  const [state, setState] = useLocalStorageWithDebounce<StoredBillState>(
+    STORAGE_KEY,
+    prepareForStorage(getInitialBillState()),
+    { debounceMs: 500 }
+  )
+
+  // Migrate state if needed
+  const billState: BillState = migrateStoredState(state)
+
+  // Update state and persist
+  const updateState = useCallback(
+    (newState: BillState) => {
+      setState(prepareForStorage(newState))
+    },
+    [setState]
+  )
+
+  // Person operations
+  const handleAddPerson = useCallback(
+    (name: string) => {
+      updateState(addPerson(billState, name))
+    },
+    [billState, updateState]
+  )
+
+  const handleRemovePerson = useCallback(
+    (personId: string) => {
+      updateState(removePerson(billState, personId))
+    },
+    [billState, updateState]
+  )
+
+  const handleUpdatePerson = useCallback(
+    (personId: string, updates: Partial<Person>) => {
+      updateState(updatePerson(billState, personId, updates))
+    },
+    [billState, updateState]
+  )
+
+  // Item operations
+  const handleAddItem = useCallback(
+    (name: string, amount: number, assignedTo: string, taxRate?: number) => {
+      updateState(addItem(billState, name, amount, assignedTo, taxRate))
+    },
+    [billState, updateState]
+  )
+
+  const handleRemoveItem = useCallback(
+    (itemId: string) => {
+      updateState(removeItem(billState, itemId))
+    },
+    [billState, updateState]
+  )
+
+  const handleUpdateItem = useCallback(
+    (itemId: string, updates: Partial<Item>) => {
+      updateState(updateItem(billState, itemId, updates))
+    },
+    [billState, updateState]
+  )
+
+  const handleReassignItem = useCallback(
+    (itemId: string, newPersonId: string) => {
+      updateState(reassignItem(billState, itemId, newPersonId))
+    },
+    [billState, updateState]
+  )
+
+  // Tax and tip operations
+  const handleSetTaxRate = useCallback(
+    (taxRate: number) => {
+      updateState(setTaxRate(billState, taxRate))
+    },
+    [billState, updateState]
+  )
+
+  const handleSetTipMode = useCallback(
+    (tipMode: 'none' | 'fixed' | 'percentage') => {
+      updateState(setTipMode(billState, tipMode))
+    },
+    [billState, updateState]
+  )
+
+  const handleSetTipAmount = useCallback(
+    (tipAmount: number) => {
+      updateState(setTipAmount(billState, tipAmount))
+    },
+    [billState, updateState]
+  )
+
+  // Batch operations
+  const handleRemovePersonAndReassignItems = useCallback(
+    (personId: string, reassignToPersonId: string) => {
+      updateState(
+        removePersonAndReassignItems(billState, personId, reassignToPersonId)
+      )
+    },
+    [billState, updateState]
+  )
+
+  return {
+    // State
+    state: billState,
+
+    // Person operations
+    addPerson: handleAddPerson,
+    removePerson: handleRemovePerson,
+    updatePerson: handleUpdatePerson,
+
+    // Item operations
+    addItem: handleAddItem,
+    removeItem: handleRemoveItem,
+    updateItem: handleUpdateItem,
+    reassignItem: handleReassignItem,
+
+    // Tax and tip operations
+    setTaxRate: handleSetTaxRate,
+    setTipMode: handleSetTipMode,
+    setTipAmount: handleSetTipAmount,
+
+    // Batch operations
+    removePersonAndReassignItems: handleRemovePersonAndReassignItems,
+  }
+}
+
+export default useBillState
