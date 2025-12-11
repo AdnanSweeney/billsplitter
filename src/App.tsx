@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { PeopleForm, ItemForm } from './components'
+import { PeopleForm, ItemForm, TaxTipControls, SummaryView } from './components'
 
 const AppContainer = styled.div`
   display: flex;
@@ -21,34 +21,33 @@ const Subtitle = styled.p`
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.2rem;
   text-align: center;
-  max-width: 600px;
+  max-width: 640px;
   margin-bottom: 40px;
 `
 
-const FormsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+const SectionsGrid = styled.div`
+  display: grid;
   width: 100%;
   max-width: 1200px;
-  align-items: center;
-
-  @media (min-width: 1024px) {
-    flex-direction: row;
-    align-items: flex-start;
-  }
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 `
 
 function App() {
   return (
     <AppContainer>
       <Title>BillSplitter</Title>
-      <Subtitle>Split bills with different tax rates applied to different charges</Subtitle>
+      <Subtitle>
+        Split every item between friends, apply the right provincial tax rate, and see exactly what
+        everyone owes including tax and tip.
+      </Subtitle>
 
-      <FormsContainer>
+      <SectionsGrid>
         <PeopleForm />
         <ItemForm />
-      </FormsContainer>
+        <TaxTipControls />
+        <SummaryView />
+      </SectionsGrid>
     </AppContainer>
   )
 }

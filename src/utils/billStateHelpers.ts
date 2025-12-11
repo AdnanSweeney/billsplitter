@@ -1,6 +1,44 @@
 import { BillState, Item, ItemSplit, Person, StoredBillState } from '../types'
+import { DEFAULT_TAX_PRESET_ID, TAX_PRESETS } from '../constants'
 
-const CURRENT_STORAGE_VERSION = 1
+const CURRENT_STORAGE_VERSION = 2
+
+const DEFAULT_TAX_PRESET =
+  TAX_PRESETS.find((preset) => preset.id === DEFAULT_TAX_PRESET_ID) || TAX_PRESETS[0]
+const DEFAULT_TAX_RATE = DEFAULT_TAX_PRESET?.rate ?? 0
+const DEFAULT_PROVINCE_ID = DEFAULT_TAX_PRESET?.id ?? DEFAULT_TAX_PRESET_ID
+
+function normalizeItems(items: any[], fallbackTaxRate: number): Item[] {
+  return (items || []).map((item: any) => {
+    if (item?.splits?.length) {
+      return {
+        id: item.id,
+        name: item.name,
+        amount: item.amount,
+        splits: item.splits,
+        taxRate: item.taxRate ?? fallbackTaxRate,
+      }
+    }
+
+    if (item?.assignedTo) {
+      return {
+        id: item.id,
+        name: item.name,
+        amount: item.amount,
+        splits: [{ personId: item.assignedTo, percentage: 100 }],
+        taxRate: item.taxRate ?? fallbackTaxRate,
+      }
+    }
+
+    return {
+      id: item.id,
+      name: item.name,
+      amount: item.amount,
+      splits: [],
+      taxRate: item.taxRate ?? fallbackTaxRate,
+    }
+  })
+}
 
 // Generate unique ID for items
 export function generateId(): string {
@@ -12,9 +50,10 @@ export function getInitialBillState(): BillState {
   return {
     people: [],
     items: [],
-    taxRate: 0,
-    tipMode: 'none',
-    tipAmount: 0,
+    taxRate: DEFAULT_TAX_RATE,
+    selectedProvinceId: DEFAULT_PROVINCE_ID,
+    tipMode: 'proportional',
+    tipPercentage: 0.18,
   }
 }
 
@@ -112,9 +151,7 @@ export function updateItem(
 ): BillState {
   return {
     ...state,
-    items: state.items.map((item) =>
-      item.id === itemId ? { ...item, ...updates } : item
-    ),
+    items: state.items.map((item) => (item.id === itemId ? { ...item, ...updates } : item)),
   }
 }
 
@@ -149,9 +186,19 @@ export function setTaxRate(state: BillState, taxRate: number): BillState {
   }
 }
 
+export function setSelectedProvinceId(
+  state: BillState,
+  provinceId: string
+): BillState {
+  return {
+    ...state,
+    selectedProvinceId: provinceId,
+  }
+}
+
 export function setTipMode(
   state: BillState,
-  tipMode: 'none' | 'fixed' | 'percentage'
+  tipMode: 'equal' | 'proportional'
 ): BillState {
   return {
     ...state,
@@ -159,10 +206,10 @@ export function setTipMode(
   }
 }
 
-export function setTipAmount(state: BillState, tipAmount: number): BillState {
+export function setTipPercentage(state: BillState, tipPercentage: number): BillState {
   return {
     ...state,
-    tipAmount: Math.max(0, tipAmount),
+    tipPercentage: Math.max(0, tipPercentage),
   }
 }
 
@@ -187,7 +234,6 @@ export function removePersonAndReassignItems(
       const hasSplitForPerson = item.splits.some((split) => split.personId === personId)
       if (!hasSplitForPerson) return item
 
-      // Remove the old person's split and add their percentage to the reassign target
       const oldSplit = item.splits.find((split) => split.personId === personId)
       const targetSplit = item.splits.find((split) => split.personId === reassignToPersonId)
 
@@ -199,7 +245,6 @@ export function removePersonAndReassignItems(
             : split
         )
 
-      // If target person wasn't in splits, add them with the old person's percentage
       if (!targetSplit && oldSplit) {
         newSplits.push({ personId: reassignToPersonId, percentage: oldSplit.percentage })
       }
@@ -211,43 +256,42 @@ export function removePersonAndReassignItems(
 
 // Storage migrations
 export function migrateStoredState(stored: any): BillState {
-  const { version, people, items, taxRate, tipMode, tipAmount } = stored
+  if (!stored || typeof stored !== 'object') {
+    return getInitialBillState()
+  }
+
+  const { version } = stored
 
   if (version === CURRENT_STORAGE_VERSION) {
-    // Ensure all items have splits array
-    const migratedItems = items.map((item: any) => {
-      if ('splits' in item) {
-        return item
-      }
-      // Migrate old format with assignedTo to new format with splits
-      if ('assignedTo' in item) {
-        return {
-          id: item.id,
-          name: item.name,
-          amount: item.amount,
-          splits: [{ personId: item.assignedTo, percentage: 100 }],
-          taxRate: item.taxRate,
-        }
-      }
-      return item
-    })
+    return stored as BillState
+  }
 
-    return { people, items: migratedItems, taxRate, tipMode, tipAmount }
+  if (version === 1) {
+    const migratedItems = normalizeItems(stored.items || [], stored.taxRate ?? DEFAULT_TAX_RATE)
+    const tipPercentage =
+      stored.tipMode === 'percentage' ? Math.max(0, (stored.tipAmount || 0) / 100) : 0
+
+    return {
+      people: stored.people || [],
+      items: migratedItems,
+      taxRate: stored.taxRate ?? DEFAULT_TAX_RATE,
+      selectedProvinceId: stored.selectedProvinceId || DEFAULT_PROVINCE_ID,
+      tipMode: 'proportional',
+      tipPercentage,
+    }
   }
 
   if (version === 0 || version === undefined) {
-    // Migration from version 0 to 1: convert assignedTo to splits
-    const migratedItems = items.map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      amount: item.amount,
-      splits: item.assignedTo
-        ? [{ personId: item.assignedTo, percentage: 100 }]
-        : item.splits || [],
-      taxRate: item.taxRate,
-    }))
+    const migratedItems = normalizeItems(stored.items || [], stored.taxRate ?? DEFAULT_TAX_RATE)
 
-    return { people, items: migratedItems, taxRate, tipMode, tipAmount }
+    return {
+      people: stored.people || [],
+      items: migratedItems,
+      taxRate: stored.taxRate ?? DEFAULT_TAX_RATE,
+      selectedProvinceId: DEFAULT_PROVINCE_ID,
+      tipMode: 'proportional',
+      tipPercentage: 0,
+    }
   }
 
   console.warn(`Unknown storage version: ${version}. Using initial state.`)

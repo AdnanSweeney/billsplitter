@@ -9,9 +9,12 @@ export {
   updateItem,
   reassignItem,
   setTaxRate,
+  setSelectedProvinceId,
   setTipMode,
-  setTipAmount,
+  setTipPercentage,
   removePersonAndReassignItems,
   migrateStoredState,
   prepareForStorage,
 } from './billStateHelpers'
+
+export { calculateBillSummary } from './billCalculations'
