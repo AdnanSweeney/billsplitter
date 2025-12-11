@@ -67,7 +67,7 @@ export function BillStateDemo() {
     removeItem,
     setTaxRate,
     setTipMode,
-    setTipAmount,
+    setTipPercentage,
   } = useBillStateContext()
 
   const handleAddDemoPerson = () => {
@@ -79,8 +79,8 @@ export function BillStateDemo() {
       const randomPerson = state.people[0]
       addItem(
         `Item ${state.items.length + 1}`,
-        Math.random() * 50,
-        randomPerson.id,
+        parseFloat((Math.random() * 50).toFixed(2)),
+        [{ personId: randomPerson.id, percentage: 100 }],
         state.taxRate
       )
     }
@@ -112,11 +112,16 @@ export function BillStateDemo() {
         ) : (
           <ItemList>
             {state.items.map((item) => {
-              const person = state.people.find((p) => p.id === item.assignedTo)
+              const splitsDescription = item.splits
+                .map((split) => {
+                  const name = state.people.find((p) => p.id === split.personId)?.name || 'Unknown'
+                  return `${name} (${split.percentage}%)`
+                })
+                .join(', ')
+
               return (
                 <ItemEntry key={item.id}>
-                  {item.name} - ${item.amount.toFixed(2)} (Assigned to:{' '}
-                  {person?.name || 'Unknown'})
+                  {item.name} - ${item.amount.toFixed(2)} (Split between: {splitsDescription})
                   <Button onClick={() => removeItem(item.id)}>Remove</Button>
                 </ItemEntry>
               )
@@ -132,12 +137,15 @@ export function BillStateDemo() {
         <Title>Settings</Title>
         <div>
           <label>
-            Tax Rate ({(state.taxRate * 100).toFixed(1)}%):
+            Tax Rate Percentage:
             <input
               type="number"
-              step="0.01"
-              value={state.taxRate}
-              onChange={(e) => setTaxRate(parseFloat(e.target.value))}
+              step="0.1"
+              min="0"
+              value={(state.taxRate * 100).toFixed(1)}
+              onChange={(e) =>
+                setTaxRate(Number.isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value) / 100)
+              }
             />
           </label>
         </div>
@@ -146,26 +154,28 @@ export function BillStateDemo() {
             Tip Mode:
             <select
               value={state.tipMode}
-              onChange={(e) =>
-                setTipMode(
-                  e.target.value as 'none' | 'fixed' | 'percentage'
-                )
-              }
+              onChange={(e) => setTipMode(e.target.value as 'equal' | 'proportional')}
             >
-              <option value="none">None</option>
-              <option value="fixed">Fixed</option>
-              <option value="percentage">Percentage</option>
+              <option value="proportional">Proportional</option>
+              <option value="equal">Equal Split</option>
             </select>
           </label>
         </div>
         <div>
           <label>
-            Tip Amount: ${state.tipAmount.toFixed(2)}
+            Tip Percentage:
             <input
               type="number"
-              step="0.01"
-              value={state.tipAmount}
-              onChange={(e) => setTipAmount(parseFloat(e.target.value))}
+              step="0.1"
+              min="0"
+              value={(state.tipPercentage * 100).toFixed(1)}
+              onChange={(e) =>
+                setTipPercentage(
+                  Number.isNaN(parseFloat(e.target.value))
+                    ? 0
+                    : parseFloat(e.target.value) / 100
+                )
+              }
             />
           </label>
         </div>

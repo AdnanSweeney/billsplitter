@@ -10,7 +10,8 @@ export interface BillStateContextType {
   updateItem: (itemId: string, updates: Partial<Item>) => void
   reassignItem: (itemId: string, newSplits: ItemSplit[]) => void
   setTaxRate: (taxRate: number) => void
-  setTipMode: (tipMode: 'none' | 'fixed' | 'percentage') => void
-  setTipAmount: (tipAmount: number) => void
+  setSelectedProvinceId: (provinceId: string) => void
+  setTipMode: (tipMode: 'equal' | 'proportional') => void
+  setTipPercentage: (tipPercentage: number) => void
   removePersonAndReassignItems: (personId: string, reassignToPersonId: string) => void
 }

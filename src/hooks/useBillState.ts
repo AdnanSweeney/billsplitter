@@ -13,8 +13,9 @@ import {
   updateItem,
   reassignItem,
   setTaxRate,
+  setSelectedProvinceId,
   setTipMode,
-  setTipAmount,
+  setTipPercentage,
   removePersonAndReassignItems,
 } from '../utils/billStateHelpers'
 
@@ -97,16 +98,23 @@ function useBillState() {
     [billState, updateState]
   )
 
+  const handleSetSelectedProvince = useCallback(
+    (provinceId: string) => {
+      updateState(setSelectedProvinceId(billState, provinceId))
+    },
+    [billState, updateState]
+  )
+
   const handleSetTipMode = useCallback(
-    (tipMode: 'none' | 'fixed' | 'percentage') => {
+    (tipMode: 'equal' | 'proportional') => {
       updateState(setTipMode(billState, tipMode))
     },
     [billState, updateState]
   )
 
-  const handleSetTipAmount = useCallback(
-    (tipAmount: number) => {
-      updateState(setTipAmount(billState, tipAmount))
+  const handleSetTipPercentage = useCallback(
+    (tipPercentage: number) => {
+      updateState(setTipPercentage(billState, tipPercentage))
     },
     [billState, updateState]
   )
@@ -138,8 +146,9 @@ function useBillState() {
 
     // Tax and tip operations
     setTaxRate: handleSetTaxRate,
+    setSelectedProvinceId: handleSetSelectedProvince,
     setTipMode: handleSetTipMode,
-    setTipAmount: handleSetTipAmount,
+    setTipPercentage: handleSetTipPercentage,
 
     // Batch operations
     removePersonAndReassignItems: handleRemovePersonAndReassignItems,

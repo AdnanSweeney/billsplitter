@@ -1,16 +1,13 @@
-// Person model
 export interface Person {
   id: string
   name: string
 }
 
-// Item split assignment
 export interface ItemSplit {
   personId: string
   percentage: number
 }
 
-// Item assignment model
 export interface Item {
   id: string
   name: string
@@ -19,23 +16,39 @@ export interface Item {
   taxRate: number
 }
 
-// Tax and tip settings
 export interface TaxTipSettings {
   taxRate: number
-  tipMode: 'none' | 'fixed' | 'percentage'
-  tipAmount: number
+  selectedProvinceId: string
+  tipPercentage: number
+  tipMode: 'equal' | 'proportional'
 }
 
-// Complete bill state
-export interface BillState {
+export interface BillState extends TaxTipSettings {
   people: Person[]
   items: Item[]
-  taxRate: number
-  tipMode: 'none' | 'fixed' | 'percentage'
-  tipAmount: number
 }
 
-// Storage version for migrations
 export interface StoredBillState extends BillState {
   version: number
+}
+
+export interface PersonBillShare {
+  personId: string
+  name: string
+  subtotal: number
+  tax: number
+  tip: number
+  total: number
+}
+
+export interface BillTotals {
+  subtotal: number
+  tax: number
+  tip: number
+  grandTotal: number
+}
+
+export interface BillSummary {
+  perPerson: PersonBillShare[]
+  totals: BillTotals
 }

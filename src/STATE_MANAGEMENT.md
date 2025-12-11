@@ -21,13 +21,21 @@ interface Person {
 }
 ```
 
+### ItemSplit
+```typescript
+interface ItemSplit {
+  personId: string
+  percentage: number
+}
+```
+
 ### Item
 ```typescript
 interface Item {
   id: string
   name: string
   amount: number
-  assignedTo: string // Person ID
+  splits: ItemSplit[]
   taxRate: number
 }
 ```
@@ -38,8 +46,9 @@ interface BillState {
   people: Person[]
   items: Item[]
   taxRate: number
-  tipMode: 'none' | 'fixed' | 'percentage'
-  tipAmount: number
+  selectedProvinceId: string
+  tipMode: 'equal' | 'proportional'
+  tipPercentage: number
 }
 ```
 
@@ -57,8 +66,9 @@ const {
   addItem,
   removeItem,
   setTaxRate,
+  setSelectedProvinceId,
   setTipMode,
-  setTipAmount,
+  setTipPercentage,
   // ... other methods
 } = useBillState()
 ```
@@ -107,9 +117,10 @@ Updates person properties.
 
 #### addItem
 ```typescript
-addItem(state, 'Appetizers', 25.00, personId, 0.08)
+addItem(state, 'Appetizers', 25.0, [{ personId, percentage: 100 }], 0.08)
 ```
-Adds a new item. **Fails if assigned person doesn't exist**.
+Adds a new item split across one or more people. **Fails if assigned persons don't exist** or if the splits
+aren't 100%.
 
 #### removeItem
 ```typescript
@@ -136,14 +147,19 @@ Assigns item to a different person.
 setTaxRate(state, 0.08) // 8% tax
 ```
 
-#### setTipMode
+#### setSelectedProvinceId
 ```typescript
-setTipMode(state, 'percentage') // 'none', 'fixed', or 'percentage'
+setSelectedProvinceId(state, 'ON')
 ```
 
-#### setTipAmount
+#### setTipMode
 ```typescript
-setTipAmount(state, 20) // $20 or 20% depending on tipMode
+setTipMode(state, 'proportional') // 'equal' or 'proportional'
+```
+
+#### setTipPercentage
+```typescript
+setTipPercentage(state, 0.18) // 18% tip stored as a decimal
 ```
 
 ### Batch Operations
@@ -173,7 +189,7 @@ State changes are debounced (500ms) to reduce localStorage write frequency:
 State is stored with versioning for future migrations:
 ```typescript
 interface StoredBillState extends BillState {
-  version: number // Current: 1
+  version: number // Current: 2
 }
 ```
 
