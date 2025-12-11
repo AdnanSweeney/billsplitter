@@ -29,7 +29,6 @@ export function calculateBillSummary(state: BillState): BillSummary {
 
   const perPersonValues = Array.from(personMap.values())
   const totalSubtotal = perPersonValues.reduce((sum, person) => sum + person.subtotal, 0)
-  const totalTax = perPersonValues.reduce((sum, person) => sum + person.tax, 0)
   const totalTip = totalSubtotal * state.tipPercentage
 
   if (totalTip > 0 && perPersonValues.length > 0) {
