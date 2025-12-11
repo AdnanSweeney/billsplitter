@@ -2,210 +2,223 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import { useBillStateContext } from '../hooks'
 import { ItemSplit } from '../types'
+import {
+  Card,
+  SectionTitle,
+  SectionDescription,
+  HelperText,
+  controlStyles,
+  Button,
+} from '../styles/primitives'
 
-const FormContainer = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
+const FormCard = styled(Card)`
+  gap: 1.5rem;
 `
 
-const FormTitle = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  color: #333;
+const Intro = styled.header`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`
+
+const Title = styled(SectionTitle)``
+
+const Description = styled(SectionDescription)`
+  color: var(--color-text-muted);
 `
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 1.5rem;
 `
 
 const FormRow = styled.div`
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-  }
-`
-
-const Input = styled.input`
-  flex: 1;
-  padding: 12px;
-  font-size: 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  transition: border-color 0.2s;
-  min-width: 150px;
-
-  &:focus {
-    outline: none;
-    border-color: #667eea;
-  }
-
-  &:invalid {
-    border-color: #e74c3c;
-  }
-`
-
-const Label = styled.label`
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 4px;
-  display: block;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 `
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-width: 150px;
+  gap: 0.45rem;
 `
 
-const SplitsSection = styled.div`
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 16px;
-  background-color: #f9f9f9;
+const Label = styled.label`
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+`
+
+const Input = styled.input`
+  ${controlStyles}
+`
+
+const SplitsSection = styled.section`
+  border: 1px solid var(--color-border-strong);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: var(--color-surface-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`
+
+const SplitsHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+`
+
+const SplitsHeading = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 `
 
 const SplitsTitle = styled.h3`
+  margin: 0;
   font-size: 1rem;
-  margin-bottom: 12px;
-  color: #555;
+  color: var(--color-heading);
+`
+
+const SplitsDescription = styled(HelperText)`
+  font-size: 0.85rem;
+`
+
+const SplitEvenButton = styled(Button)`
+  width: fit-content;
+`
+
+const SplitRows = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `
 
 const SplitRow = styled.div`
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(80px, 120px) auto;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 0.5rem;
 
-  @media (max-width: 600px) {
-    flex-wrap: wrap;
+  @media (max-width: 480px) {
+    grid-template-columns: minmax(0, 1fr) minmax(60px, 90px) auto;
   }
 `
 
 const SplitName = styled.span`
-  flex: 1;
-  min-width: 120px;
-  font-weight: 500;
-  color: #333;
+  font-weight: 600;
+  color: var(--color-heading);
 `
 
 const PercentageInput = styled(Input)`
-  max-width: 100px;
-  min-width: 80px;
+  text-align: right;
+  padding-right: 0.75rem;
 `
 
-const TotalPercentage = styled.div<{ isValid: boolean }>`
-  margin-top: 12px;
-  padding: 12px;
-  background-color: ${(props) => (props.isValid ? '#d4edda' : '#f8d7da')};
-  color: ${(props) => (props.isValid ? '#155724' : '#721c24')};
-  border-radius: 6px;
+const PercentSuffix = styled.span`
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+`
+
+const TotalPercentage = styled.div<{ $isValid: boolean }>`
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
   font-weight: 600;
   text-align: center;
+  background: ${({ $isValid }) =>
+    $isValid ? 'var(--color-success-soft)' : 'var(--color-error-soft)'};
+  color: ${({ $isValid }) => ($isValid ? 'var(--color-success)' : 'var(--color-danger)')};
 `
 
-const Button = styled.button<{ variant?: 'primary' | 'danger' }>`
-  padding: 12px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  background-color: ${(props) => {
-    if (props.variant === 'danger') return '#e74c3c'
-    return '#667eea'
-  }};
-  color: white;
-
-  &:hover:not(:disabled) {
-    opacity: 0.9;
-    transform: translateY(-2px);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+const SubmitButton = styled(Button)`
+  align-self: flex-start;
 `
 
 const ItemsList = styled.ul`
   list-style: none;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   margin: 0;
+  padding: 0;
 `
 
 const ItemElement = styled.li`
-  padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-
-  &:last-child {
-    border-bottom: none;
-  }
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: var(--color-surface-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `
 
 const ItemHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 1rem;
 `
 
 const ItemName = styled.span`
-  font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  font-size: 1.05rem;
+  color: var(--color-heading);
 `
 
 const ItemAmount = styled.span`
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #667eea;
+  font-weight: 700;
+  color: var(--color-primary);
 `
 
-const ItemSplitsDisplay = styled.div`
-  font-size: 0.875rem;
-  color: #666;
-  margin-bottom: 8px;
-`
-
-const ErrorMessage = styled.p`
-  color: #e74c3c;
-  font-size: 0.875rem;
-  margin-top: 8px;
-  margin-bottom: 0;
-`
-
-const EmptyState = styled.p`
-  color: #999;
-  font-style: italic;
-  text-align: center;
-  padding: 20px;
+const ItemSplitsDisplay = styled.p`
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0;
 `
 
 const ActionButtons = styled.div`
   display: flex;
-  gap: 8px;
+  justify-content: flex-end;
+`
+
+const RemoveButton = styled(Button)`
+  min-height: 2.4rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.9rem;
+  border-radius: 0.85rem;
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    box-shadow: none;
+  }
+`
+
+const ErrorMessage = styled.p`
+  color: var(--color-danger);
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0;
+`
+
+const EmptyState = styled.p`
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-style: italic;
+  background: var(--color-surface-muted);
 `
 
 export function ItemForm() {
@@ -234,7 +247,6 @@ export function ItemForm() {
 
     state.people.forEach((person, index) => {
       if (index === state.people.length - 1) {
-        // Assign remaining to last person to ensure exactly 100%
         const assigned = evenPercentage * (state.people.length - 1)
         newSplits[person.id] = parseFloat((100 - assigned).toFixed(2))
       } else {
@@ -273,7 +285,7 @@ export function ItemForm() {
     }
 
     const itemSplits: ItemSplit[] = Object.entries(splits)
-      .filter(([_, percentage]) => percentage > 0)
+      .filter(([, percentage]) => percentage > 0)
       .map(([personId, percentage]) => ({ personId, percentage }))
 
     if (itemSplits.length === 0) {
@@ -292,8 +304,11 @@ export function ItemForm() {
   }
 
   return (
-    <FormContainer>
-      <FormTitle>Items</FormTitle>
+    <FormCard>
+      <Intro>
+        <Title>Items</Title>
+        <Description>Capture every line item and decide exactly how it should be shared.</Description>
+      </Intro>
 
       {state.people.length === 0 ? (
         <EmptyState>Add people first to start adding items!</EmptyState>
@@ -301,7 +316,7 @@ export function ItemForm() {
         <Form onSubmit={handleSubmit}>
           <FormRow>
             <FormGroup>
-              <Label htmlFor="itemName">Item Description</Label>
+              <Label htmlFor="itemName">Item description</Label>
               <Input
                 id="itemName"
                 type="text"
@@ -328,36 +343,43 @@ export function ItemForm() {
           </FormRow>
 
           <SplitsSection>
-            <SplitsTitle>Split Between People (%)</SplitsTitle>
-            <Button type="button" onClick={handleEvenSplit} style={{ marginBottom: '12px' }}>
-              Split Evenly
-            </Button>
+            <SplitsHeader>
+              <SplitsHeading>
+                <SplitsTitle>Split between people (%)</SplitsTitle>
+                <SplitsDescription>Percentages must total 100% before you can add the item.</SplitsDescription>
+              </SplitsHeading>
+              <SplitEvenButton type="button" $variant="secondary" onClick={handleEvenSplit}>
+                Split evenly
+              </SplitEvenButton>
+            </SplitsHeader>
 
-            {state.people.map((person) => (
-              <SplitRow key={person.id}>
-                <SplitName>{person.name}</SplitName>
-                <PercentageInput
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  placeholder="0"
-                  value={splits[person.id] || ''}
-                  onChange={(e) => handleSplitChange(person.id, e.target.value)}
-                  aria-label={`Percentage for ${person.name}`}
-                />
-                <span>%</span>
-              </SplitRow>
-            ))}
+            <SplitRows>
+              {state.people.map((person) => (
+                <SplitRow key={person.id}>
+                  <SplitName>{person.name}</SplitName>
+                  <PercentageInput
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    placeholder="0"
+                    value={splits[person.id] || ''}
+                    onChange={(e) => handleSplitChange(person.id, e.target.value)}
+                    aria-label={`Percentage for ${person.name}`}
+                  />
+                  <PercentSuffix>%</PercentSuffix>
+                </SplitRow>
+              ))}
+            </SplitRows>
 
-            <TotalPercentage isValid={isPercentageValid}>
+            <TotalPercentage $isValid={isPercentageValid}>
               Total: {totalPercentage.toFixed(2)}% {isPercentageValid ? '✓' : '✗'}
             </TotalPercentage>
           </SplitsSection>
 
-          <Button type="submit" disabled={!itemName.trim() || !itemPrice || !isPercentageValid}>
-            Add Item
-          </Button>
+          <SubmitButton type="submit" disabled={!itemName.trim() || !itemPrice || !isPercentageValid}>
+            Add item
+          </SubmitButton>
         </Form>
       )}
 
@@ -382,14 +404,14 @@ export function ItemForm() {
               </ItemSplitsDisplay>
 
               <ActionButtons>
-                <Button variant="danger" onClick={() => removeItem(item.id)}>
+                <RemoveButton type="button" $variant="danger" onClick={() => removeItem(item.id)}>
                   Remove
-                </Button>
+                </RemoveButton>
               </ActionButtons>
             </ItemElement>
           ))}
         </ItemsList>
       )}
-    </FormContainer>
+    </FormCard>
   )
 }

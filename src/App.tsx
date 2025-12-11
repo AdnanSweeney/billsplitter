@@ -1,54 +1,94 @@
 import styled from 'styled-components'
 import { PeopleForm, ItemForm, TaxTipControls, SummaryView } from './components'
 
-const AppContainer = styled.div`
+const Page = styled.main`
+  min-height: 100vh;
+  padding: clamp(1.25rem, 4vw, 3.5rem) clamp(1rem, 4vw, 3rem);
+`
+
+const PageInner = styled.div`
+  width: min(1200px, 100%);
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  gap: clamp(1.5rem, 4vw, 3rem);
+`
+
+const Header = styled.header`
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`
+
+const Eyebrow = styled.span`
+  align-self: center;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 `
 
 const Title = styled.h1`
-  color: white;
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  text-align: center;
+  margin: 0;
+  font-size: clamp(2.3rem, 6vw, 3.5rem);
+  letter-spacing: -0.02em;
 `
 
 const Subtitle = styled.p`
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.2rem;
-  text-align: center;
-  max-width: 640px;
-  margin-bottom: 40px;
+  margin: 0 auto;
+  max-width: 60ch;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--color-text-muted);
 `
 
-const SectionsGrid = styled.div`
+const LayoutGrid = styled.section`
   display: grid;
-  width: 100%;
-  max-width: 1200px;
-  gap: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: clamp(1rem, 3vw, 2rem);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  }
+`
+
+const ColumnStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
 `
 
 function App() {
   return (
-    <AppContainer>
-      <Title>BillSplitter</Title>
-      <Subtitle>
-        Split every item between friends, apply the right provincial tax rate, and see exactly what
-        everyone owes including tax and tip.
-      </Subtitle>
+    <Page>
+      <PageInner>
+        <Header>
+          <Eyebrow>Smart bill splitting</Eyebrow>
+          <Title>BillSplitter</Title>
+          <Subtitle>
+            Split every item between friends, apply the right provincial tax rate, and see exactly what
+            everyone owes including tax and tip.
+          </Subtitle>
+        </Header>
 
-      <SectionsGrid>
-        <PeopleForm />
-        <ItemForm />
-        <TaxTipControls />
-        <SummaryView />
-      </SectionsGrid>
-    </AppContainer>
+        <LayoutGrid>
+          <ColumnStack>
+            <PeopleForm />
+            <ItemForm />
+          </ColumnStack>
+
+          <ColumnStack as="aside">
+            <TaxTipControls />
+            <SummaryView />
+          </ColumnStack>
+        </LayoutGrid>
+      </PageInner>
+    </Page>
   )
 }
 
